@@ -16,7 +16,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent
 RESUME_PATH = BASE_DIR / "my_resume.pdf"
 CACHE_PATH = BASE_DIR / ".resume_cache.json"
-
+CANDIDATE_NAME = os.getenv("CANDIDATE_NAME")
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 model = "openai/gpt-oss-120b"
@@ -119,11 +119,17 @@ def load_resume() -> Resume:
 
 
 # ---------- App ----------
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     app.state.resume = load_resume()  # runs once at startup
+#     yield
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.resume = load_resume()  # runs once at startup
+    resume = load_resume()
+    if CANDIDATE_NAME:
+        resume.name = CANDIDATE_NAME
+    app.state.resume = resume
     yield
-
 
 app = FastAPI(lifespan=lifespan)
 
